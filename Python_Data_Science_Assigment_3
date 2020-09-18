@@ -1,0 +1,40 @@
+import pandas as pd
+import numpy as np
+def answer_one():
+    archivo=pd.ExcelFile('Energy Indicators.xls')
+    energy=archivo.parse(skiprows=17,skip_footer=38)
+    #realizara un skip a lo que no es necesario
+    energy.drop(energy.columns[0:2],axis=1,inplace=True)
+    #hara un drop a las dos primeras columnas.
+    energy.columns=['Country', 'Energy Supply', 'Energy Supply per Capita', '% Renewable']
+    #convierte las tablas
+    energy['Energy Supply'] *= 1000000 
+    #las hace en giga
+    energy.dropna()
+    #hace drop a las NaNs
+    energy['Country'] = energy['Country'].replace({'China, Hong Kong Special Administrative Region':'Hong Kong','United Kingdom of Great Britain and Northern Ireland':'United Kingdom','Republic of Korea':'South Korea','United States of America':'United States','Iran (Islamic Republic of)':'Iran'})
+    #reemplaza valore malos
+    #iran tiene que ser cambiado por el hecho del espacio
+    energy['Country'] = energy['Country'].str.replace(r'\(.*\)', '') 
+    #remueve parentesis. Usa REGEX
+    energy['Country']=energy['Country'].str.replace('\d+','')
+    #remueve numeros de los nombres
+    energy['Country'] = energy['Country'].str.strip()
+    
+    GDP=pd.read_csv('world_bank.csv',skiprows=4)
+    #las primeras 4 no nos sirven.
+    GDP['Country Name']=GDP['Country Name'].replace({'China, Hong Kong Special Administrative Region':'Hong Kong','United Kingdom of Great Britain and Northern Ireland':'United Kingdom','Republic of Korea':'South Korea','United States of America':'United States','Iran (Islamic Republic of)':'Iran'})
+    #remplaza esos valores e IRAN
+    GDP = GDP[['Country Name','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']]
+    GDP.columns = ['Country','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015']
+    
+    ScimEn = pd.read_excel('scimagojr-3.xlsx')
+    primerdf = pd.merge(ScimEn,energy,how='outer',left_on='Country',right_on='Country')
+    segundodf = pd.merge(primerdf,GDP,how='outer',left_on='Country',right_on='Country')
+    segundodf = segundodf[:15] 
+    # Primeras 15
+
+    respuestadf = segundodf.set_index('Country') 
+    # Setting 'Country' for the index column
+    return respuestadf
+answer_one()
